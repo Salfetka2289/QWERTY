@@ -43,10 +43,13 @@ class Player:
         self.scale=5
         self.state='idle'
         self.side='right'
-        self.inr=0
+        self.callx=False
+        self.inr=0  #время нахождения в воздухе (в тактах)
         self.run=Animation(papka='images/entities/player/run')
         self.idle=Animation(papka='images/entities/player/idle')
         self.jump=Animation(papka='images/entities/player/jump')
+        self.wall_slide=Animation(papka='images/entities/player/wall_slide')
+
     def render(self):
         if self.state=='idle':
             self.idle.render(self.x,self.y,self.side)
@@ -54,6 +57,10 @@ class Player:
             self.run.render(self.x,self.y,self.side)
         if self.state=='jump':
             self.run.render(self.x,self.y,self.side)
+        if self.state=='wall_slide':
+            self.wall_slide.render(self.x,self.y,self.side)
+        playerhit=self.get_hitbox()
+        pygame.draw.rect(skrin,[255,0,0],[playerhit.x-lvl.camerax,playerhit.y-lvl.cameray,playerhit.width,playerhit.height],2)
 
     def update(self):
         self.inr+=1
@@ -89,10 +96,13 @@ class Player:
             self.jump.update()   
         self.vy+=0.2#сила гравитации
         self.y+=self.vy
+        if self.inr>5 and self.callx==True:
+            self.state='wall_slide'
         self.collisiony()
         
 
     def collisionx(self,dir):
+        self.callx=False
         hitplayer=self.get_hitbox()
         for i in lvl.tyles:
             tx=i['x']*lvl.tilesize
@@ -102,6 +112,7 @@ class Player:
             img=lvl.resourses[trt][ti]
             hittyle=pygame.Rect(tx,ty,img.get_width(),img.get_height())
             if hitplayer.colliderect(hittyle):
+                self.callx=True
                 if dir=='right':
                     hitplayer.right=hittyle.left
                 if dir=='left':
@@ -121,7 +132,7 @@ class Player:
                 if self.vy>0:
                     hitplayer.bottom=hittyle.top
                     self.vy=0
-                    self.inr=0
+                    self.inr=0 #время нахождения в воздухе (в тактах)
                 if self.vy<0:
                     hitplayer.top=hittyle.bottom
         self.y=hitplayer.y
@@ -167,7 +178,7 @@ while True:
                 right=False
             if i.key==pygame.K_LSHIFT:
                 speed=False
-            if i.key==pygame.K_SPACE and player.inr<5:
+            if i.key==pygame.K_SPACE and player.inr<5:   #он стоит на земле 
                 player.vy=-5                     
         if i.type==pygame.QUIT:
             exit()
