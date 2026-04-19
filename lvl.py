@@ -16,11 +16,11 @@ def loadimagess(papka,scale):
         loaded.append(imgload)
     return(loaded)
 
-decor=loadimagess('C:/Users/1/Downloads/graph/resources/decor',tilesize/16)
-grass=loadimagess('C:/Users/1/Downloads/graph/resources/grass',tilesize/16)
-large_decor=loadimagess('C:/Users/1/Downloads/graph/resources/large_decor',tilesize/16)
-stone=loadimagess('C:/Users/1/Downloads/graph/resources/stone',tilesize/16)
-spawners=loadimagess('C:/Users/1/Downloads/graph/resources/spawners',tilesize/16)
+decor=loadimagess('graph/resources/decor',tilesize/16)
+grass=loadimagess('graph/resources/grass',tilesize/16)
+large_decor=loadimagess('graph/resources/large_decor',tilesize/16)
+stone=loadimagess('graph/resources/stone',tilesize/16)
+spawners=loadimagess('graph/resources/spawners',tilesize/16)
 resourses={
     'decor':decor,
     'grass':grass,
@@ -38,6 +38,17 @@ def get_playercord():
             cordplayery=i['y']*tilesize
             tyles.remove(i)
             return(cordplayerx,cordplayery)
+        
+def get_enemycord():
+    cords=[]
+    for i in tyles:
+        if i['type']=='spawners' and i['index']==1:
+            cordenemyx=i['x']*tilesize
+            cordenemyy=i['y']*tilesize
+            tyles.remove(i)
+            cords.append([cordenemyx,cordenemyy])
+    return(cords)
+            
 
 def render_grid(skrin):
     k=camerax//tilesize

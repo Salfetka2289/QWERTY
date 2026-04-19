@@ -19,11 +19,11 @@ def loadimagess(papka,scale):
         loaded.append(imgload)
     return(loaded)
 
-decor=loadimagess('C:/Users/1/Downloads/graph/resources/decor',tilesize/16)
-grass=loadimagess('C:/Users/1/Downloads/graph/resources/grass',tilesize/16)
-large_decor=loadimagess('C:/Users/1/Downloads/graph/resources/large_decor',tilesize/16)
-stone=loadimagess('C:/Users/1/Downloads/graph/resources/stone',tilesize/16)
-spawners=loadimagess('C:/Users/1/Downloads/graph/resources/spawners',tilesize/16)
+decor=loadimagess('graph/resources/decor',tilesize/16)
+grass=loadimagess('graph/resources/grass',tilesize/16)
+large_decor=loadimagess('graph/resources/large_decor',tilesize/16)
+stone=loadimagess('graph/resources/stone',tilesize/16)
+spawners=loadimagess('graph/resources/spawners',tilesize/16)
 resourses={
     'decor':decor,
     'grass':grass,
@@ -169,5 +169,6 @@ while True:
                     if n['x']==cx and n['y']==cy:
                         tyles.remove(n)
         if i.type==pygame.QUIT:
+            safe()
             exit()
     pygame.display.update()

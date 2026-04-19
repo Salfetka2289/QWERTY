@@ -4,9 +4,6 @@ import lvl
 pygame.init()
 skrin=pygame.display.set_mode([1500,1000])
 Clock=pygame.time.Clock()
-left=False
-right=False
-speed=False
 scale=5 
 def loadimagess(papka,scale):
     loaded=[]
@@ -40,6 +37,9 @@ class Player:
         self.y=100
         self.vy=0
         self.m=0.1
+        self.left=False
+        self.right=False
+        self.speed=False
         self.scale=5
         self.state='idle'
         self.side='right'
@@ -66,8 +66,8 @@ class Player:
         self.inr+=1
         if self.inr>5:
             self.state='jump'
-        if left == True:
-            if speed == True:
+        if self.left == True:
+            if self.speed == True:
                 self.x-=10
                 self.collisionx('left')
             else:
@@ -75,8 +75,8 @@ class Player:
                 self.collisionx('left')
             self.state='run'
             self.side='left'
-        if right == True:
-            if speed == True:
+        if self.right == True:
+            if self.speed == True:
                 self.x+=10 
                 self.collisionx('right')
             else:
@@ -86,7 +86,7 @@ class Player:
             self.side='right'
         self.vy=self.vy+self.m
         self.y+=self.vy
-        if right == False and left == False:
+        if self.right == False and self.left == False:
             self.state='idle'
         if self.state=='idle':
             self.idle.update()
@@ -146,10 +146,17 @@ class Enemy(Player):
         self.run=Animation(papka='images/entities/enemy/run')
         self.idle=Animation(papka='images/entities/enemy/idle')
         self.jump=Animation(papka='images/entities/enemy/idle')
-enemy=Enemy()
+
+enemys=[]
 player=Player()
 lvl.load()  
+enemycords=lvl.get_enemycord()
 cords=lvl.get_playercord()
+for i in enemycords:
+    enemy=Enemy()
+    enemy.x=i[0]
+    enemy.y=i[1]
+    enemys.append(enemy)
 player.x=cords[0]
 player.y=cords[1]
 while True:
@@ -157,27 +164,28 @@ while True:
     Clock.tick(60)
     player.render()
     player.update()
-    enemy.render()
-    enemy.update() 
     lvl.render_tyles(skrin)
     lvl.camerax+=(player.x-750-lvl.camerax)/20
     lvl.cameray+=(player.y-500-lvl.cameray)/20
     ivents=pygame.event.get()
+    for i in enemys:
+        i.render()
+        i.update()
     for i in ivents:
         if i.type==pygame.KEYDOWN:
             if i.key==pygame.K_a:
-                left=True
+                player.left=True
             if i.key==pygame.K_d:
-                right=True
+                player.right=True
             if i.key==pygame.K_LSHIFT:
-                speed=True
+                player.speed=True
         if i.type==pygame.KEYUP:
             if i.key==pygame.K_a:
-                left=False
+                player.left=False
             if i.key==pygame.K_d:
-                right=False
+                player.right=False
             if i.key==pygame.K_LSHIFT:
-                speed=False
+                player.speed=False
             if i.key==pygame.K_SPACE and player.inr<5:   #он стоит на земле 
                 player.vy=-5                     
         if i.type==pygame.QUIT:
