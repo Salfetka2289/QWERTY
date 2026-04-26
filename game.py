@@ -1,6 +1,7 @@
 import pygame
 import os
 import lvl
+import random
 pygame.init()
 skrin=pygame.display.set_mode([1500,1000])
 Clock=pygame.time.Clock()
@@ -143,9 +144,28 @@ class Player:
 class Enemy(Player):
     def __init__(self):
         super().__init__()
+        self.time=random.randint(60,180)
         self.run=Animation(papka='images/entities/enemy/run')
         self.idle=Animation(papka='images/entities/enemy/idle')
         self.jump=Animation(papka='images/entities/enemy/idle')
+    
+    def enemy_control(self):
+        self.time-=1
+        if self.time<=0:
+            if self.right==True or self.left==True:
+                self.right=False
+                self.left=False
+            else:
+                r=random.randint(1,2)
+                if r==1:
+                    self.left=True
+                if r==2:
+                    self.right=True
+            self.time=random.randint(60,180)
+        if self.right==True:
+            footx=self.x+70
+            footy=self.y+70
+
 
 enemys=[]
 player=Player()
@@ -171,6 +191,7 @@ while True:
     for i in enemys:
         i.render()
         i.update()
+        i.enemy_control()
     for i in ivents:
         if i.type==pygame.KEYDOWN:
             if i.key==pygame.K_a:

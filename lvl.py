@@ -41,13 +41,23 @@ def get_playercord():
         
 def get_enemycord():
     cords=[]
-    for i in tyles:
+    for i in tyles.copy():
         if i['type']=='spawners' and i['index']==1:
             cordenemyx=i['x']*tilesize
             cordenemyy=i['y']*tilesize
             tyles.remove(i)
             cords.append([cordenemyx,cordenemyy])
     return(cords)
+
+def iscliff(footx,footy):
+    for i in tyles:
+        bx=i['x']*tilesize
+        by=i['y']*tilesize
+        bhit=pygame.rect.Rect([bx,by],[70,70])
+        if bhit.collidepoint(footx,footy):
+            return(False)
+    return(True)
+
             
 
 def render_grid(skrin):
