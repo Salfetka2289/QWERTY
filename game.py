@@ -42,6 +42,7 @@ class Player:
         self.right=False
         self.speed=False
         self.scale=5
+        self.inercia=0
         self.state='idle'
         self.side='right'
         self.callx=False
@@ -65,26 +66,35 @@ class Player:
 
     def update(self):
         self.inr+=1
+        self.x+=self.inercia
+        if self.inercia>0:
+            self.collisionx('right')
+        if self.inercia<0:
+            self.collisionx('left')
+        if abs (self.inercia)<1:
+            self.inercia=0
+        self.inercia*=0.9
         if self.inr>5:
             self.state='jump'
-        if self.left == True:
-            if self.speed == True:
-                self.x-=10
-                self.collisionx('left')
-            else:
-                self.x-=5
-                self.collisionx('left')
-            self.state='run'
-            self.side='left'
-        if self.right == True:
-            if self.speed == True:
-                self.x+=10 
-                self.collisionx('right')
-            else:
-                self.x+=5
-                self.collisionx('right')
-            self.state='run'
-            self.side='right'
+        if self.inercia==0:
+            if self.left == True:
+                if self.speed == True:
+                    self.x-=10
+                    self.collisionx('left')
+                else:
+                    self.x-=5
+                    self.collisionx('left')
+                self.state='run'
+                self.side='left'
+            if self.right == True:
+                if self.speed == True:
+                    self.x+=10 
+                    self.collisionx('right')
+                else:
+                    self.x+=5
+                    self.collisionx('right')
+                self.state='run'
+                self.side='right'
         self.vy=self.vy+self.m
         self.y+=self.vy
         if self.right == False and self.left == False:
@@ -103,6 +113,8 @@ class Player:
         
 
     def collisionx(self,dir):
+        self.call_r=False
+        self.call_l=False
         self.callx=False
         hitplayer=self.get_hitbox()
         for i in lvl.tyles:
@@ -116,9 +128,11 @@ class Player:
                 self.callx=True
                 if dir=='right':
                     hitplayer.right=hittyle.left
+                    self.call_r=True
                 if dir=='left':
                     hitplayer.left=hittyle.right
-        self.x=hitplayer.x
+                    self.call_l=True
+        self.x=hitplayer.x-12
         
     def collisiony(self):
         hitplayer=self.get_hitbox()
@@ -138,7 +152,7 @@ class Player:
                     hitplayer.top=hittyle.bottom
         self.y=hitplayer.y
     def get_hitbox(self):
-        h=pygame.Rect(self.x,self.y,14*5,18*5)
+        h=pygame.Rect(self.x,self.y,14*5,18*5).inflate(-24,0)
         return(h)
     
 class Enemy(Player):
@@ -200,6 +214,16 @@ while True:
                 player.right=True
             if i.key==pygame.K_LSHIFT:
                 player.speed=True
+            if i.key==pygame.K_SPACE and player.state=='wall_slide':
+                player.vy=-8
+                if player.call_r==True:
+                    player.inercia=-30
+                    player.side='left'
+                else:
+                    player.inercia=+30
+                    player.side='right'
+            if i.key==pygame.K_SPACE and player.inr<5:   #он стоит на земле 
+                player.vy=-5                     
         if i.type==pygame.KEYUP:
             if i.key==pygame.K_a:
                 player.left=False
@@ -207,8 +231,6 @@ while True:
                 player.right=False
             if i.key==pygame.K_LSHIFT:
                 player.speed=False
-            if i.key==pygame.K_SPACE and player.inr<5:   #он стоит на земле 
-                player.vy=-5                     
         if i.type==pygame.QUIT:
             exit()
     pygame.display.update()
