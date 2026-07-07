@@ -3,9 +3,14 @@ import os
 import lvl
 import random
 pygame.init()
-skrin=pygame.display.set_mode([1500,1000])
+pygame.mixer.init()
+skrin=pygame.display.set_mode([1300,900])
 Clock=pygame.time.Clock()
 scale=5 
+sound_gun=pygame.mixer.Sound('graph/images/icons/gun-shot-1-7069.mp3')
+sound_gun.set_volume(0.05)
+pygame.mixer.music.load('graph/images/icons/music.wav')  
+pygame.mixer.music.play(-1)
 def loadimagess(papka,scale):
     loaded=[]
     for i in os.listdir(papka):
@@ -31,6 +36,7 @@ class Animation:
             self.timer=10
             if self.index==len(self.imagess):
                 self.index=0    
+            
 
 class Player:
     def __init__(self):
@@ -46,6 +52,7 @@ class Player:
         self.state='idle'
         self.side='right'
         self.callx=False
+        self.health=3
         self.inr=0  #время нахождения в воздухе (в тактах)
         self.run=Animation(papka='images/entities/player/run')
         self.idle=Animation(papka='images/entities/player/idle')
@@ -63,6 +70,19 @@ class Player:
             self.wall_slide.render(self.x,self.y,self.side)
         playerhit=self.get_hitbox()
         pygame.draw.rect(skrin,[255,0,0],[playerhit.x-lvl.camerax,playerhit.y-lvl.cameray,playerhit.width,playerhit.height],2)
+        if self==player:
+            if self.health==3:
+                skrin.blit(heart,(50,50))
+                skrin.blit(heart,(125,50))
+                skrin.blit(heart,(200,50))
+            if self.health==2:
+                skrin.blit(heart,(50,50))
+                skrin.blit(heart,(125,50))
+            if self.health==1:
+                skrin.blit(heart,(50,50))
+        if self.health==0:
+            exit()
+            
 
     def update(self):
         self.inr+=1
@@ -110,7 +130,12 @@ class Player:
         if self.inr>5 and self.callx==True:
             self.state='wall_slide'
         self.collisiony()
-        
+        hit_Player=self.get_hitbox()
+        for i in bullets:
+            bullet_hit=i.get_hitbox()
+            if bullet_hit.colliderect(hit_Player):
+                self.health-=1
+                bullets.remove(i)
 
     def collisionx(self,dir):
         self.call_r=False
@@ -154,7 +179,7 @@ class Player:
     def get_hitbox(self):
         h=pygame.Rect(self.x,self.y,14*5,18*5).inflate(-24,0)
         return(h)
-    
+        
 class Enemy(Player):
     def __init__(self):
         super().__init__()
@@ -162,14 +187,49 @@ class Enemy(Player):
         self.run=Animation(papka='images/entities/enemy/run')
         self.idle=Animation(papka='images/entities/enemy/idle')
         self.jump=Animation(papka='images/entities/enemy/idle')
-    
+        self.gun=pygame.image.load('graph/images/gun.png')
+        self.gun=pygame.transform.scale_by(self.gun,6)
+        self.bullet_timer=0
+
+    def render(self):
+        super().render()
+        hit=self.get_detecthitbox()
+        pygame.draw.rect(skrin,(255,0,0),(hit.move(-lvl.camerax,-lvl.cameray)),2)
+        self.bullet_timer-=1
+        if self.bullet_timer<=0:
+            self.bullet_timer=0
+
     def enemy_control(self):
+        hitE=self.get_detecthitbox()
+        hitP=player.get_hitbox()
+        if hitE.colliderect(hitP):
+            self.attack_control()
+        else:
+            self.casual_control()
+
+    def attack_control(self):
+        self.right=False
+        self.left=False
+        if self.bullet_timer==0:
+            if self.side=='right':
+                bullet=Bullet(self.x+55,self.y+45,self.side)
+            if self.side=='left':
+                bullet=Bullet(self.x-5,self.y+45,self.side)
+            bullets.append(bullet)
+            self.bullet_timer=180
+    def get_detecthitbox(self):
+        if self.side=='right':
+            return (pygame.Rect(self.x+50,self.y,500,100))
+        else:
+            return (pygame.Rect(self.x-500,self.y,500,100))
+    
+    def casual_control(self): 
         self.time-=1
         if self.time<=0:
-            if self.right==True or self.left==True:
+            if self.right==True or self.left==True:  #если движется, то останавливем когда таймер истекает
                 self.right=False
                 self.left=False
-            else:
+            else:                               # если стоит, то начинает двигаться когда таймер истекает
                 r=random.randint(1,2)
                 if r==1:
                     self.left=True
@@ -179,8 +239,37 @@ class Enemy(Player):
         if self.right==True:
             footx=self.x+70
             footy=self.y+70
+    def render_gun(self):
+        if self.side=='right':
+            skrin.blit(self.gun,[self.x-lvl.camerax+55,self.y-lvl.cameray+45])
+        else:
+            self.lgun=pygame.transform.flip(self.gun,True,False)
+            skrin.blit(self.lgun,[self.x-lvl.camerax-5,self.y-lvl.cameray+45])
 
+class Bullet:
+    def __init__(self,x,y,side):
+        self.x=x
+        self.y=y
+        self.side=side
+        self.bullet=pygame.image.load('graph/images/projectile.png')
+        self.bullet=pygame.transform.scale_by(self.bullet,3)
+        sound_gun.play()
 
+    def render(self):
+        skrin.blit(self.bullet,[self.x-lvl.camerax,self.y-lvl.cameray])
+
+    def update(self):
+        if self.side=='right':
+            self.x+=4
+        else:
+            self.x-=4
+    def get_hitbox(self):
+        hit_bullet=pygame.Rect(self.x,self.y,self.bullet.get_width(),self.bullet.get_height())
+        return(hit_bullet)
+
+heart=pygame.image.load('graph/images/icons/heart.png')
+heart=pygame.transform.scale_by(heart,0.1)
+bullets=[]
 enemys=[]
 player=Player()
 lvl.load()  
@@ -198,6 +287,11 @@ while True:
     Clock.tick(60)
     player.render()
     player.update()
+    for i in bullets:
+        i.update()
+        i.render()
+    for i in enemys:
+        i.render_gun()
     lvl.render_tyles(skrin)
     lvl.camerax+=(player.x-750-lvl.camerax)/20
     lvl.cameray+=(player.y-500-lvl.cameray)/20
@@ -208,6 +302,8 @@ while True:
         i.enemy_control()
     for i in ivents:
         if i.type==pygame.KEYDOWN:
+            if i.key==pygame.K_ESCAPE:
+                exit()
             if i.key==pygame.K_a:
                 player.left=True
             if i.key==pygame.K_d:
